@@ -1,0 +1,63 @@
+with user_base as (
+select userid,
+country,
+age,
+gender,
+device,
+gamegenre as genre,
+spendingsegment,
+sessioncount as total_sessions,
+round(averagesessionlength::numeric,2) as avg_ssesion_length,
+(sessioncount * averagesessionlength)::numeric as total_time_in_game,
+coalesce(inapppurchaseamount,0) as total_revenue,
+case when coalesce(inapppurchaseamount,0) > 0 then 'Payer' else 'Non-payer'
+end as user_type,
+firstpurchasedaysafterinstall as days_to_first_purchase,
+lastpurchasedate as last_purchase_date,
+paymentmethod
+from mobilegames
+),
+arppu_calc as (
+select user_type,
+case
+	when user_type = 'Payer'
+	then round(sum(total_revenue)::numeric/count(distinct userid), 2) 
+	else 0
+end as ARPPU
+from user_base
+group by user_type
+),
+payments_stats as (
+select paymentmethod,
+sum(total_revenue) as revenue_by_payment,
+round(avg(nullif(total_revenue,0))::numeric, 2) as avg_check_by_payment
+from user_base
+group by paymentmethod 
+),
+days_distribution as (
+select days_to_first_purchase,
+count(*) as user_count
+from user_base
+where days_to_first_purchase is not null
+group by days_to_first_purchase
+)
+select ub.userid,
+ub.user_type,
+ub.country,
+ub.age,
+ub.gender,
+ub.device,
+ub.genre,
+ub.spendingsegment,
+ub.total_sessions,
+ub.avg_ssesion_length,
+ub.total_revenue,
+ac.ARPPU,
+ub.days_to_first_purchase,
+ub.last_purchase_date,
+ub.paymentmethod,
+ps.revenue_by_payment,
+ps.avg_check_by_payment
+from user_base ub
+left join arppu_calc ac on ub.user_type = ac.user_type
+left join payments_stats ps on ub.paymentmethod = ps.paymentmethod
