@@ -1,0 +1,6 @@
+3.Project for analyzing mobile game revenue.
+It displays key metrics and snapshots that allow you to understand:
+-Revenue dynamics over time.
+-Payers vs. Non-payers — the division of users who pay and those who do not pay.
+-There are filters by date, country, age, device, and game genre to view breakdowns across different user segments.
+-Visualizations are made in the form of bar charts, line graphs, and heatmaps, showing segment comparisons.
